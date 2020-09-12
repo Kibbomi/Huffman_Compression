@@ -6,13 +6,15 @@ using namespace std;
 
 const bool ERROR = false;
 
-//filename -> string?
-bool cal_frequency(const char * filename, int  freq[][94], int *freqascii)
+bool cal_frequency(string filename, int  freq[][94], int *freqascii)
 {
-	FILE * file = fopen(filename, "rt");
+	//ANSI로 저장되어 있어야 함.
+	FILE * file = fopen(filename.c_str(), "rt");
 
-	if (file == NULL) 
+	if (file == NULL) {
+		printf("File open error!\n");
 		return ERROR;//실패
+	}
 
 	unsigned char index[2] = { 0 };
 
@@ -115,7 +117,7 @@ void inorder(const tree & root, priority_queue<code, vector<code>, Mycomp_code> 
 	return;
 }
 
-bool huffman_encode(const char * file, priority_queue<code,vector<code>,Mycomp_code> &huffcode)
+bool huffman_encode(string file, priority_queue<code,vector<code>,Mycomp_code> &huffcode)
 {
 	int freq[25][94] = { 0 };	//frequency of 한글
 	int freq_ascii[128] = { 0 };	//alphabet
@@ -130,9 +132,9 @@ bool huffman_encode(const char * file, priority_queue<code,vector<code>,Mycomp_c
 
 	make_tree(pq);
 	//pq의 top이 huffman tree
-	make_code(pq,huffcode);
+	make_code(pq, huffcode);
 
-	while (!huffcode.empty())
+	/*while (!huffcode.empty())
 	{
 		code item = huffcode.top();
 		huffcode.pop();
@@ -140,8 +142,57 @@ bool huffman_encode(const char * file, priority_queue<code,vector<code>,Mycomp_c
 			printf("Word : %c%c, Code : %s\n", item.name[0], item.name[1], item.huffcode.c_str());
 		else
 			printf("Word : %c, Code : %s\n", item.name[0], item.huffcode.c_str());
-	}
-	//convert_binary(file, code);
+	}*/
+	
+	convert_binary(file, huffcode);
 
 	return true;
+}
+
+//header : code개수(unsigned short 2byte), {code값, code유효bit(unsigned short 2byte), codedata}, 문서전체의 마지막 byte의 유효bit수.
+void convert_binary(string filename, priority_queue<code, vector<code>, Mycomp_code> & huffcode) 
+{
+	FILE *readfile = fopen(filename.c_str(), "rt");
+	
+	filename.erase(filename.length() - 4, 4);
+	string savefilename = filename + ".bin";
+
+	FILE *writefile = fopen(savefilename.c_str(), "wb");
+
+	fprintf(writefile,"%hd", (unsigned short)huffcode.size());
+
+	while (!huffcode.empty())
+	{
+		code item = huffcode.top();
+		huffcode.pop();
+
+		//korean
+		if (item.name[0] > 127)
+		{
+			fprintf(writefile, "%c%c", item.name[0], item.name[1]);
+		}
+		//alphabet
+		else
+		{
+			fprintf(writefile, "%c", item.name[0]);
+		}
+
+		
+		fprintf(writefile, "%hd", (unsigned short)item.huffcode.length());
+		
+		int len = (int)item.huffcode.length();
+		int remainder = item.huffcode.length() % 8;
+
+		for (int i = 0; i < len; ++i) {
+
+		}
+
+	}
+
+
+
+	fclose(readfile);
+	fclose(writefile);
+
+	return;
 }
