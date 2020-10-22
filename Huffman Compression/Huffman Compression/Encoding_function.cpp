@@ -1,10 +1,30 @@
 #include "Data.h"
 #include "Encoding_function.h"
 #include <cstdio>
-#include <string>
 using namespace std;
 
 const bool ERROR = false;
+
+string search_code(vector<code> &v, BYTE buffer[2])
+{
+	//korean
+	if (buffer[0] > 127)
+	{
+		for (code item : v) {
+			if (item.name[0] == buffer[0] && item.name[1] == buffer[1])
+				return item.huffcode;
+		}
+	}
+	//alphabet
+	else
+	{
+		for (code item : v) {
+			if (item.name[0] == buffer[0])
+				return item.huffcode;
+		}
+	}
+	return string("NULL");
+}
 
 bool cal_frequency(string filename, int  freq[][94], int *freqascii)
 {
@@ -134,23 +154,24 @@ bool huffman_encode(string file, priority_queue<code,vector<code>,Mycomp_code> &
 	//pq의 top이 huffman tree
 	make_code(pq, huffcode);
 
-	/*while (!huffcode.empty())
+	priority_queue<code, vector<code>, Mycomp_code> test = huffcode;
+	while (!test.empty())
 	{
-		code item = huffcode.top();
-		huffcode.pop();
+		code item = test.top();
+		test.pop();
 		if (item.name[0] > 127)
 			printf("Word : %c%c, Code : %s\n", item.name[0], item.name[1], item.huffcode.c_str());
 		else
 			printf("Word : %c, Code : %s\n", item.name[0], item.huffcode.c_str());
-	}*/
+	}
 	
 	convert_binary(file, huffcode);
 
 	return true;
 }
 
-//header : code개수(unsigned short 2byte), {code값, code유효bit(unsigned short 2byte), codedata},
-//body : 인코딩된 데이터, 마지막 bit 유효 bit수.
+//header : 오른쪽부터 마지막 bit 유효 bit 수, code개수, {code값, code유효bit, codedata (x byte)},
+//body : 인코딩된 데이터
 
 void convert_binary(string filename, priority_queue<code, vector<code>, Mycomp_code> & huffcode) 
 {
@@ -161,12 +182,24 @@ void convert_binary(string filename, priority_queue<code, vector<code>, Mycomp_c
 
 	FILE *writefile = fopen(savefilename.c_str(), "wb");
 
-	fprintf(writefile,"%hd", (unsigned short)huffcode.size());
+	int dummy = 0;
+	fprintf(writefile, "%c", dummy);
+	fprintf(writefile,"%c", (char)huffcode.size());
+	
+	/*fclose(readfile);
+	fclose(writefile);
+
+	return;*/
+
+	//본문 encoding용 복사.
+	int idx = 0;
+	vector<code> v(huffcode.size());
 
 	while (!huffcode.empty())
 	{
 		code item = huffcode.top();
 		huffcode.pop();
+		v[idx++] = item;
 
 		//korean
 		if (item.name[0] > 127)
@@ -180,37 +213,71 @@ void convert_binary(string filename, priority_queue<code, vector<code>, Mycomp_c
 		}
 
 		
-		fprintf(writefile, "%hd", (unsigned short)item.huffcode.length());
+		fprintf(writefile, "%c",(char)item.huffcode.length());
 		
-		int len = (int)item.huffcode.length();	
-		int remainder = item.huffcode.length() % 8;
-		//code의 개수는 len*8 + remainder.
-		//이걸 byte에
-		
-		for (int i = 0; i < len; ++i) {
-			
-			BYTE buffer;
+		BYTE buffer = 0;
+		int msb = -1;
 
-			for (int j = 0; j < 8; ++j){
-				buffer = buffer | item.huffcode[i * 8 + j];
-				buffer = buffer << 1;
+		for (int i = 0; i < item.huffcode.length(); ++i)
+		{
+			if (msb == 7) {
+				fprintf(writefile, "%c", buffer);
+				buffer = 0;
+				msb = -1;
 			}
 
+			buffer = buffer << 1;
+			buffer = buffer | item.huffcode[i] - '0';
+			++msb;
+		}
+
+		if (msb != -1) {
+			while (msb != 7) {
+				buffer = buffer << 1;
+				msb++;
+			}
 			fprintf(writefile, "%c", buffer);
 		}
-
-		BYTE buffer;
-		for (int i = 0; i < remainder; ++i){
-			buffer = buffer | item.huffcode[len * 8 + i];
-			buffer = buffer << 1;
-		}
-
-		for (int i = 0; i + remainder < 8; ++i)
-			buffer = buffer << 1;
-		
-		fprintf(writefile, "%c", buffer);	
 	}
-	//--encoding is finished--
+	//--Header encoding is finished--
+
+	BYTE word[2];
+	BYTE buffer = 0;
+	int msb = -1;	//most significant bit
+
+	while (fscanf(readfile, "%c", &word[0]) != EOF) {
+
+		if (word[0] > 127)
+			fscanf(readfile, "%c", &word[1]);
+
+		//buffer의 글자에 해당하는 code를 획득
+		string write_code = search_code(v, word);
+		
+
+		for (int i = 0; i < write_code.length(); ++i)
+		{
+			if (msb == 7) {
+				fprintf(writefile, "%c", buffer);
+				buffer = 0;
+				msb = -1;
+			}
+
+			buffer = buffer << 1;
+			buffer = buffer | write_code[i] - '0';
+			++msb;
+
+		}
+	}
+	//last byte
+	int lastbit = msb;
+	while (lastbit != 7) {
+		buffer = buffer << 1;
+		lastbit++;
+	}
+
+	fprintf(writefile, "%c", buffer);
+	fseek(writefile, 0, SEEK_SET);
+	fprintf(writefile, "%c", (char)msb);
 
 	fclose(readfile);
 	fclose(writefile);

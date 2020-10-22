@@ -21,12 +21,18 @@
     <ClCompile Include="Encoding_function.cpp">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="Decoding_function.cpp">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Data.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
     <ClInclude Include="Encoding_function.h">
+      <Filter>헤더 파일</Filter>
+    </ClInclude>
+    <ClInclude Include="Decoding_function.h">
       <Filter>헤더 파일</Filter>
     </ClInclude>
   </ItemGroup>

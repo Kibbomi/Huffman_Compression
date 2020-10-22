@@ -5,6 +5,7 @@ typedef unsigned char BYTE;
 #include <queue>	//for priority queue
 #include <list>
 #include <string>
+#include <vector>
 using namespace std;
 
 class tree
