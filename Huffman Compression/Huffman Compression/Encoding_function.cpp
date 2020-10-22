@@ -149,7 +149,9 @@ bool huffman_encode(string file, priority_queue<code,vector<code>,Mycomp_code> &
 	return true;
 }
 
-//header : code개수(unsigned short 2byte), {code값, code유효bit(unsigned short 2byte), codedata}, 문서전체의 마지막 byte의 유효bit수.
+//header : code개수(unsigned short 2byte), {code값, code유효bit(unsigned short 2byte), codedata},
+//body : 인코딩된 데이터, 마지막 bit 유효 bit수.
+
 void convert_binary(string filename, priority_queue<code, vector<code>, Mycomp_code> & huffcode) 
 {
 	FILE *readfile = fopen(filename.c_str(), "rt");
@@ -180,16 +182,35 @@ void convert_binary(string filename, priority_queue<code, vector<code>, Mycomp_c
 		
 		fprintf(writefile, "%hd", (unsigned short)item.huffcode.length());
 		
-		int len = (int)item.huffcode.length();
+		int len = (int)item.huffcode.length();	
 		int remainder = item.huffcode.length() % 8;
-
+		//code의 개수는 len*8 + remainder.
+		//이걸 byte에
+		
 		for (int i = 0; i < len; ++i) {
+			
+			BYTE buffer;
 
+			for (int j = 0; j < 8; ++j){
+				buffer = buffer | item.huffcode[i * 8 + j];
+				buffer = buffer << 1;
+			}
+
+			fprintf(writefile, "%c", buffer);
 		}
 
+		BYTE buffer;
+		for (int i = 0; i < remainder; ++i){
+			buffer = buffer | item.huffcode[len * 8 + i];
+			buffer = buffer << 1;
+		}
+
+		for (int i = 0; i + remainder < 8; ++i)
+			buffer = buffer << 1;
+		
+		fprintf(writefile, "%c", buffer);	
 	}
-
-
+	//--encoding is finished--
 
 	fclose(readfile);
 	fclose(writefile);

@@ -14,13 +14,6 @@ bool make_code(const priority_queue<tree, vector<tree>, Mycomp_tree>&, priority_
 bool huffman_encode(string , priority_queue<code, vector<code>, Mycomp_code> &);
 void convert_binary(string , priority_queue<code, vector<code>, Mycomp_code> &);
 
-/*
-unsigned char * search_code(struct code*, unsigned char*);
-
-*/
-
-
-
 
 
 #endif

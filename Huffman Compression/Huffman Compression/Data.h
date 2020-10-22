@@ -1,6 +1,7 @@
 #ifndef KIBBOMI_Data
 #define KIBBOMI_Data
 #define MAX_WORD 2478	//최대 글자개수
+typedef unsigned char BYTE;
 #include <queue>	//for priority queue
 #include <list>
 #include <string>
@@ -12,7 +13,7 @@ public :
 	tree(){}
 	tree(unsigned char name1_, unsigned char name2_, int freq_) { name[0] = name1_; name[1] = name2_;  freq = freq_;  left_child = list<tree>(); right_child = list<tree>(); }
 	//data
-	
+
 	unsigned char name[2];	//한글 2bytes
 	int freq;	//frequency
 
