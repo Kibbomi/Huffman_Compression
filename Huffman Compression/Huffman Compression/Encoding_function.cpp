@@ -32,7 +32,7 @@ bool cal_frequency(string filename, int  freq[][94], int *freqascii)
 	FILE * file = fopen(filename.c_str(), "rt");
 
 	if (file == NULL) {
-		printf("File open error!\n");
+		//printf("File open error!\n");
 		return ERROR;//실패
 	}
 
@@ -146,7 +146,7 @@ bool huffman_encode(string file, priority_queue<code,vector<code>,Mycomp_code> &
 	
 	//------부호화시작----------
 	if(cal_frequency(file, freq, freq_ascii) == ERROR)
-		return false;
+		return ERROR;
 
 	make_node(freq, freq_ascii, pq);
 
@@ -154,7 +154,8 @@ bool huffman_encode(string file, priority_queue<code,vector<code>,Mycomp_code> &
 	//pq의 top이 huffman tree
 	make_code(pq, huffcode);
 
-	priority_queue<code, vector<code>, Mycomp_code> test = huffcode;
+	
+	/*priority_queue<code, vector<code>, Mycomp_code> test = huffcode;
 	while (!test.empty())
 	{
 		code item = test.top();
@@ -163,7 +164,7 @@ bool huffman_encode(string file, priority_queue<code,vector<code>,Mycomp_code> &
 			printf("Word : %c%c, Code : %s\n", item.name[0], item.name[1], item.huffcode.c_str());
 		else
 			printf("Word : %c, Code : %s\n", item.name[0], item.huffcode.c_str());
-	}
+	}*/
 	
 	convert_binary(file, huffcode);
 
@@ -184,8 +185,9 @@ void convert_binary(string filename, priority_queue<code, vector<code>, Mycomp_c
 
 	int dummy = 0;
 	fprintf(writefile, "%c", dummy);
-	fprintf(writefile,"%c", (char)huffcode.size());
-	
+	//fprintf(writefile,"%c", (char)huffcode.size());
+	fprintf(writefile, "%d", (int)huffcode.size());
+
 	/*fclose(readfile);
 	fclose(writefile);
 

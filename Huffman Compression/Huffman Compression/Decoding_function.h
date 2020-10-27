@@ -3,9 +3,8 @@
 
 #include "Data.h"
 
-
-void huffman_decode(string);
-unsigned char* search_code(vector<code> &, string);
-
+bool huffman_decode(string);
+bool search_code(vector<code> &, string &, BYTE [2]);
+bool MySort(const code &,const code &);
 
 #endif
